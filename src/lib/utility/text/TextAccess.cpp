@@ -142,7 +142,7 @@ std::vector<std::string> TextAccess::readFile(const FilePath& filePath)
 	try
 	{
 		std::ifstream srcFile;
-		srcFile.open(filePath.str());
+		srcFile.open(filePath.str(), std::ios::binary | std::ios::in);
 
 		if (srcFile.fail())
 		{
