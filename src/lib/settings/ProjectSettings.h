@@ -36,6 +36,11 @@ public:
 	void setProjectFilePath(std::wstring projectName, const FilePath& projectFileLocation);
 	FilePath getDependenciesDirectoryPath() const;
 
+	int getPluginPort() const;
+	void setPluginPort(const int pluginPort);
+	int getSourcetrailPort() const;
+	void setSourcetrailPort(const int sourcetrailPort);
+
 	FilePath getDBFilePath() const;
 	FilePath getTempDBFilePath() const;
 	FilePath getBookmarkDBFilePath() const;

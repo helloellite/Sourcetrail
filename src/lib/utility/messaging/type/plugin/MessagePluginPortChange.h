@@ -6,7 +6,9 @@
 class MessagePluginPortChange: public Message<MessagePluginPortChange>
 {
 public:
-	MessagePluginPortChange() {}
+	int pluginPort;
+	int sourcetrailPort;
+	MessagePluginPortChange(int pp=0, int sp=0):pluginPort(pp), sourcetrailPort(sp) {}
 
 	static const std::string getStaticType()
 	{

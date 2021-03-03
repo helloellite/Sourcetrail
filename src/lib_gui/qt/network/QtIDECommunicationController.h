@@ -20,6 +20,7 @@ public:
 	virtual void stopListening();
 
 	virtual bool isListening() const;
+	virtual void handleMessage(MessagePluginPortChange* message);
 
 private:
 	virtual void sendMessage(const std::wstring& message) const;

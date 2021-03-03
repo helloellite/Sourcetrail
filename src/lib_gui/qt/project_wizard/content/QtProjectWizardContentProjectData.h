@@ -32,6 +32,8 @@ private:
 	bool m_disableNameEditing;
 	QLineEdit* m_projectName;
 	QtLocationPicker* m_projectFileLocation;
+	QLineEdit* m_pluginPort;
+	QLineEdit* m_sourcetrailPort;
 };
 
 #endif	  // QT_PROJECT_WIZARD_CONTENT_PROJECT_DATA_H

@@ -25,7 +25,8 @@ public:
 		const std::string& appUUID,
 		bool hasGUI);
 	virtual ~Project();
-
+	
+	std::shared_ptr<ProjectSettings> getProjectSetting() const;
 	FilePath getProjectSettingsFilePath() const;
 	std::string getDescription() const;
 

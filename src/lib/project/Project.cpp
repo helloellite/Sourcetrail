@@ -31,6 +31,7 @@
 #include "MessageIndexingStatus.h"
 #include "MessageRefresh.h"
 #include "MessageStatus.h"
+#include "MessagePluginPortChange.h"
 #include "TabId.h"
 #include "TaskDecoratorRepeat.h"
 #include "TaskFindKeyOnBlackboard.h"
@@ -61,6 +62,11 @@ Project::Project(
 }
 
 Project::~Project() {}
+
+std::shared_ptr<ProjectSettings> Project::getProjectSetting() const
+{
+	return m_settings;
+}
 
 FilePath Project::getProjectSettingsFilePath() const
 {
@@ -270,6 +276,7 @@ void Project::load(std::shared_ptr<DialogView> dialogView)
 	{
 		MessageRefresh().dispatch();
 	}
+	MessagePluginPortChange(m_settings->getPluginPort(), m_settings->getSourcetrailPort()).dispatch();
 }
 
 void Project::refresh(
@@ -426,6 +433,7 @@ void Project::refresh(
 		info.shallow = useShallowIndexing;
 		buildIndex(info, dialogView);
 	}
+	MessagePluginPortChange(m_settings->getPluginPort(), m_settings->getSourcetrailPort()).dispatch();
 }
 
 RefreshInfo Project::getRefreshInfo(RefreshMode mode) const

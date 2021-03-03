@@ -142,6 +142,26 @@ FilePath ProjectSettings::getDependenciesDirectoryPath() const
 	return getProjectDirectoryPath().concatenate(L"sourcetrail_dependencies");
 }
 
+int ProjectSettings::getPluginPort() const
+{
+	return getValue<int>("network/plugin_port", 6666);
+}
+
+void ProjectSettings::setPluginPort(const int pluginPort)
+{
+	setValue<int>("network/plugin_port", pluginPort);
+}
+
+int ProjectSettings::getSourcetrailPort() const
+{
+	return getValue<int>("network/sourcetrail_port", 6667);
+}
+
+void ProjectSettings::setSourcetrailPort(const int sourcetrailPort)
+{
+	setValue<int>("network/sourcetrail_port", sourcetrailPort);
+}
+
 FilePath ProjectSettings::getDBFilePath() const
 {
 	return getFilePath().replaceExtension(INDEX_DB_FILE_EXTENSION);

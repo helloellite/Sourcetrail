@@ -52,6 +52,22 @@ void QtProjectWizardContentProjectData::populate(QGridLayout* layout, int& row)
 		row);
 	layout->setRowMinimumHeight(row, 30);
 	row++;
+
+	char* texts[] = { "IDE Port", "Sourcetrail Port" };
+	QLineEdit** ports[] = { &m_pluginPort, &m_sourcetrailPort };
+	for (int i=0;i<2;i++)
+	{
+		auto& text = texts[i];
+		QLineEdit* port = *(ports[i]) = new QLineEdit();
+		QLabel* portLabel = createFormLabel(QString(text));
+		port->setObjectName(QString(text));
+		port->setAttribute(Qt::WA_MacShowFocusRect, 0);
+
+		layout->addWidget(portLabel, row, QtProjectWizardWindow::FRONT_COL, Qt::AlignRight);
+		layout->addWidget(port, row, QtProjectWizardWindow::BACK_COL);
+		layout->setRowMinimumHeight(row, 30);
+		row++;
+	}
 }
 
 void QtProjectWizardContentProjectData::load()
@@ -59,6 +75,8 @@ void QtProjectWizardContentProjectData::load()
 	m_projectName->setText(QString::fromStdWString(m_projectSettings->getProjectName()));
 	m_projectFileLocation->setText(
 		QString::fromStdWString(m_projectSettings->getProjectDirectoryPath().wstr()));
+	m_pluginPort->setText(QString::number(m_projectSettings->getPluginPort()));
+	m_sourcetrailPort->setText(QString::number(m_projectSettings->getSourcetrailPort()));
 }
 
 void QtProjectWizardContentProjectData::save()
@@ -66,6 +84,9 @@ void QtProjectWizardContentProjectData::save()
 	m_projectSettings->setProjectFilePath(
 		m_projectName->text().toStdWString(),
 		FilePath(m_projectFileLocation->getText().toStdWString()));
+
+	m_projectSettings->setPluginPort(m_pluginPort->text().toInt());
+	m_projectSettings->setSourcetrailPort(m_sourcetrailPort->text().toInt());
 }
 
 bool QtProjectWizardContentProjectData::check()
@@ -160,3 +181,4 @@ void QtProjectWizardContentProjectData::onProjectNameEdited(QString text)
 	m_projectName->setText(text);
 	m_projectName->setCursorPosition(cursorPosition);
 }
+
