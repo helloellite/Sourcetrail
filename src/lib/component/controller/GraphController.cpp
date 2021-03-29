@@ -273,6 +273,9 @@ void GraphController::handleMessage(MessageActivateTrail* message)
 	}
 
 	createDummyGraph(graph);
+
+	breakMemberBox();
+	
 	m_graph->setTrailMode(message->horizontalLayout ? Graph::TRAIL_HORIZONTAL : Graph::TRAIL_VERTICAL);
 	m_graph->setHasTrailOrigin(message->originId);
 
@@ -622,6 +625,31 @@ void GraphController::handleMessage(MessageShowReference* message)
 	GraphView::GraphParams params;
 	params.animatedTransition = false;
 	buildGraph(message, params);
+}
+
+void GraphController::breakMemberBox()
+{
+	std::set<Id> toRemove;
+	auto iter = m_topLevelAncestorIds.begin();
+	while (iter != m_topLevelAncestorIds.end())
+	{
+		if (iter->first != iter->second)
+		{
+			toRemove.emplace(iter->second);
+			auto& parent = m_dummyGraphNodes[iter->second];
+			auto& node = m_dummyGraphNodes[iter->first];
+			iter->second = iter->first;
+			node->name = parent->name + L"." + node->name;
+			m_dummyNodes.emplace_back(node);
+		}
+		iter++;
+	}
+	for (auto& id : toRemove)
+	{
+		auto& iter = std::find(m_dummyNodes.begin(), m_dummyNodes.end(), m_dummyGraphNodes[id]);
+		if (iter != m_dummyNodes.end())
+			m_dummyNodes.erase(iter);
+	}
 }
 
 GraphView* GraphController::getView() const

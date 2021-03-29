@@ -80,6 +80,8 @@ private:
 	void handleMessage(MessageScrollGraph* message) override;
 	void handleMessage(MessageShowReference* message) override;
 
+	void breakMemberBox();
+
 	GraphView* getView() const;
 
 	void clear() override;
