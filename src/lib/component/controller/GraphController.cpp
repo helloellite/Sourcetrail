@@ -215,6 +215,16 @@ void GraphController::handleMessage(MessageActivateTrail* message)
 
 	m_activeEdgeIds.clear();
 
+	m_activeNodeIds = {message->originId ? message->originId : message->targetId};
+	{
+		// XXX node may not exist here, re-implement this by getting node from Storage
+		auto& node = m_dummyGraphNodes[m_activeNodeIds[0]],
+			parent = m_dummyGraphNodes[m_topLevelAncestorIds[node->tokenId]];
+		parent->data->forEachChildNode([&node, this](Node* child) {
+			if (child->getType() == node->data->getType() && child->getId() != node->tokenId)
+				this->m_activeNodeIds.emplace_back(child->getId());
+		});
+	}
 	std::shared_ptr<Graph> graph = m_storageAccess->getGraphForTrail(
 		message->originId,
 		message->targetId,
@@ -222,7 +232,9 @@ void GraphController::handleMessage(MessageActivateTrail* message)
 		message->edgeTypes,
 		message->nodeNonIndexed,
 		message->depth,
-		true /* !message->custom || (message->originId && message->targetId) */);
+		true /* !message->custom || (message->originId && message->targetId) */,
+		&m_activeNodeIds
+		);
 
 	// remove non-indexed files from include graph if indexed file is origin
 	if (!message->custom && message->edgeTypes & Edge::EDGE_INCLUDE)
@@ -279,7 +291,7 @@ void GraphController::handleMessage(MessageActivateTrail* message)
 	m_graph->setTrailMode(message->horizontalLayout ? Graph::TRAIL_HORIZONTAL : Graph::TRAIL_VERTICAL);
 	m_graph->setHasTrailOrigin(message->originId);
 
-	m_activeNodeIds = {message->originId ? message->originId : message->targetId};
+
 	setActive(m_activeNodeIds, true);
 	setVisibility(true);
 
