@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-TrailLayouter::TrailLayouter(LayoutDirection dir): m_direction(dir), m_rootNode(nullptr) {}
+TrailLayouter::TrailLayouter(LayoutDirection dir): m_direction(dir) {}
 
 void TrailLayouter::layoutGraph(
 	std::vector<std::shared_ptr<DummyNode>>& dummyNodes,
@@ -11,13 +11,14 @@ void TrailLayouter::layoutGraph(
 {
 	buildGraph(dummyNodes, dummyEdges, topLevelAncestorIds);
 
-	if (!m_rootNode)
+	if (!m_rootNodes.size())
 	{
 		return;
 	}
 
 	removeDeadEnds();
-	makeAcyclicRecursive(m_rootNode, std::set<TrailNode*>());
+	for(auto&rootNode:m_rootNodes)
+		makeAcyclicRecursive(rootNode, std::set<TrailNode*>());
 
 	assignLongestPathLevels();
 	assignRemainingLevels();
@@ -64,8 +65,7 @@ void TrailLayouter::removeDeadEnds()
 	std::set<TrailNode*> deadEnds;
 	std::set<TrailNode*> loseEnds;
 
-	std::deque<TrailNode*> nodes;
-	nodes.push_back(m_rootNode);
+	std::deque<TrailNode*> nodes(m_rootNodes.begin(), m_rootNodes.end());
 
 	while (nodes.size())
 	{
@@ -163,9 +163,7 @@ void TrailLayouter::makeAcyclicRecursive(TrailNode* node, std::set<TrailNode*> p
 
 void TrailLayouter::assignLongestPathLevels()
 {
-	std::set<TrailNode*> nodes;
-	nodes.insert(m_rootNode);
-
+	std::set<TrailNode*> nodes(m_rootNodes.begin(),m_rootNodes.end());
 	std::map<TrailNode*, TrailNode*> predecessorNodes;
 
 	int level = 0;
@@ -214,10 +212,12 @@ void TrailLayouter::assignLongestPathLevels()
 void TrailLayouter::assignRemainingLevels()
 {
 	std::multimap<int, TrailNode*> nodes;
-	nodes.emplace(m_rootNode->level, m_rootNode);
-
 	std::set<TrailNode*> allNodes;
-	allNodes.insert(m_rootNode);
+	for (auto&rootNode : m_rootNodes)
+	{
+		nodes.emplace(rootNode->level, rootNode);
+		allNodes.insert(rootNode);
+	}
 
 	while (nodes.size())
 	{
@@ -667,9 +667,9 @@ void TrailLayouter::addNode(const std::shared_ptr<DummyNode>& dummyNode)
 		m_nodesById.emplace(node->id, node.get());
 	}
 
-	if (!m_rootNode && dummyNode->hasActiveSubNode())
+	if (dummyNode->hasActiveSubNode())
 	{
-		m_rootNode = node.get();
+		m_rootNodes.emplace_back(node.get());
 	}
 }
 
