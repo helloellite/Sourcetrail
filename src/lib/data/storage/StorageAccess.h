@@ -71,7 +71,8 @@ public:
 		Edge::TypeMask edgeTypes,
 		bool nodeNonIndexed,
 		size_t depth,
-		bool directed) const = 0;
+		bool directed,
+		std::vector<Id>* others=nullptr) const = 0;
 
 	virtual NodeKindMask getAvailableNodeTypes() const = 0;
 	virtual Edge::TypeMask getAvailableEdgeTypes() const = 0;

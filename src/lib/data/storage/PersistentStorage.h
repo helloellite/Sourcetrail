@@ -139,7 +139,8 @@ public:
 		Edge::TypeMask trailType,
 		bool nodeNonIndexed,
 		size_t depth,
-		bool directed) const override;
+		bool directed,
+		std::vector<Id>* others=nullptr) const override;
 
 	NodeKindMask getAvailableNodeTypes() const override;
 	Edge::TypeMask getAvailableEdgeTypes() const override;

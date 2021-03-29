@@ -152,7 +152,35 @@ void StorageAccessProxy::setSubject(std::weak_ptr<StorageAccess> subject)
 		}                                                                                          \
 		return _DEFAULT_VALUE_;                                                                    \
 	}
-
+#define DEF_GETTER_8(                                                                              \
+	_METHOD_NAME_,                                                                                 \
+	_PARAM_1_TYPE_,                                                                                \
+	_PARAM_2_TYPE_,                                                                                \
+	_PARAM_3_TYPE_,                                                                                \
+	_PARAM_4_TYPE_,                                                                                \
+	_PARAM_5_TYPE_,                                                                                \
+	_PARAM_6_TYPE_,                                                                                \
+	_PARAM_7_TYPE_,                                                                                \
+	_PARAM_8_TYPE_,                                                                                \
+	_RETURN_TYPE_,                                                                                 \
+	_DEFAULT_VALUE_)                                                                               \
+	UNWRAP(_RETURN_TYPE_)                                                                          \
+	StorageAccessProxy::_METHOD_NAME_(                                                             \
+		_PARAM_1_TYPE_ p1,                                                                         \
+		_PARAM_2_TYPE_ p2,                                                                         \
+		_PARAM_3_TYPE_ p3,                                                                         \
+		_PARAM_4_TYPE_ p4,                                                                         \
+		_PARAM_5_TYPE_ p5,                                                                         \
+		_PARAM_6_TYPE_ p6,                                                                         \
+		_PARAM_7_TYPE_ p7,																		   \
+		_PARAM_8_TYPE_ p8) const                                                                   \
+	{                                                                                              \
+		if (std::shared_ptr<StorageAccess> subject = m_subject.lock())                             \
+		{                                                                                          \
+			return subject->_METHOD_NAME_(p1, p2, p3, p4, p5, p6, p7, p8);                             \
+		}                                                                                          \
+		return _DEFAULT_VALUE_;                                                                    \
+	}
 DEF_GETTER_1(getNodeIdForFileNode, const FilePath&, Id, 0)
 DEF_GETTER_1(getNodeIdForNameHierarchy, const NameHierarchy&, Id, 0)
 DEF_GETTER_1(getNodeIdsForNameHierarchies, const std::vector<NameHierarchy>, std::vector<Id>, {})
@@ -192,7 +220,7 @@ DEF_GETTER_3(
 	std::shared_ptr<Graph>,
 	std::make_shared<Graph>())
 DEF_GETTER_1(getGraphForChildrenOfNodeId, Id, std::shared_ptr<Graph>, std::make_shared<Graph>())
-DEF_GETTER_7(
+DEF_GETTER_8(
 	getGraphForTrail,
 	Id,
 	Id,
@@ -201,6 +229,7 @@ DEF_GETTER_7(
 	bool,
 	size_t,
 	bool,
+	std::vector<Id>*,
 	std::shared_ptr<Graph>,
 	std::make_shared<Graph>())
 DEF_GETTER_0(getAvailableNodeTypes, NodeKindMask, 0);

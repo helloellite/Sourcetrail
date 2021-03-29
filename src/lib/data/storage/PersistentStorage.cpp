@@ -1289,7 +1289,8 @@ std::shared_ptr<Graph> PersistentStorage::getGraphForTrail(
 	Edge::TypeMask edgeTypes,
 	bool nodeNonIndexed,
 	size_t depth,
-	bool directed) const
+	bool directed,
+	std::vector<Id>* others) const
 {
 	TRACE();
 
@@ -1297,10 +1298,13 @@ std::shared_ptr<Graph> PersistentStorage::getGraphForTrail(
 	std::set<Id> edgeIds;
 
 	nodeIds.insert(originId ? originId : targetId);
+	if (others) {		// XXX refactor it
+		nodeIds.insert(others->begin(), others->end());
+	}
 	bool forward = originId;
 	size_t currentDepth = 0;
 
-	std::vector<Id> nodeIdsToProcess = {*nodeIds.begin()};
+	std::vector<Id> nodeIdsToProcess(nodeIds.begin(), nodeIds.end());
 
 	struct TrailNode
 	{
