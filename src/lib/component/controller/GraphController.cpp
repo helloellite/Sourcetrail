@@ -22,6 +22,9 @@
 #include "utility.h"
 #include "utilityString.h"
 
+#define NEXT(edge, forward) (forward? edge->getTo(): edge->getFrom())
+#define LAST(edge, forward) (forward? edge->getFrom(): edge->getTo())
+
 GraphController::GraphController(StorageAccess* storageAccess)
 	: m_storageAccess(storageAccess), m_useBezierEdges(false)
 {
@@ -264,8 +267,6 @@ void GraphController::handleMessage(MessageActivateTrail* message)
 	{
 		// find real source
 		bool forward = message->originId;
-#define NEXT(edge, direction) (direction? edge->getTo(): edge->getFrom())
-#define LAST(edge, direction) (direction? edge->getFrom(): edge->getTo())
 		Node* node;
 		std::set<Node*> nodes, newNodes, visited;
 		std::set<Id> roots;
@@ -615,10 +616,49 @@ void GraphController::handleMessage(MessageGraphNodeHide* message)
 	{
 		if (node->active || node->hasActiveSubNode())
 		{
-			MessageStatus(L"Can't hide active node or node with active children", true).dispatch();
-			return;
-		}
+			if (m_activeNodeIds.size() == 0)
+			{
+				MessageStatus(L"Can't hide active node or node with active children", true).dispatch();
+				return;
+			}
+			{
+				// unactive node and active its successor
+				node->active = false;
+				auto iter = std::find(m_activeNodeIds.begin(), m_activeNodeIds.end(), node->tokenId);
+				if (iter != m_activeNodeIds.end())
+					m_activeNodeIds.erase(iter);
+				std::set<Id> activeNodes(m_activeNodeIds.begin(), m_activeNodeIds.end());
+				node->data->forEachEdgeOfType(~Edge::EDGE_MEMBER, [this, &activeNodes, &node](Edge* edge) {
 
+					// edge visible should be considered
+					DummyEdge* dummEdge = getDummyGraphEdgeById(edge->getId());
+					if(dummEdge && !dummEdge->visible); 
+						return;
+
+					//assert active_node has incomming/outgoing edge only 
+					Id other = edge->getTo()->getId() == node->tokenId ? edge->getFrom()->getId() : edge->getTo()->getId();
+					auto otherNode = m_dummyGraphNodes[other];
+					if (!otherNode->hidden)
+					{
+						bool hasActivePreNode = false;
+						bool forward = edge->getTo()->getId() == node->tokenId;
+						otherNode->data->forEachEdgeOfType(~Edge::EDGE_MEMBER, [forward, &hasActivePreNode, &activeNodes, &otherNode](Edge* edge) {
+							if (activeNodes.find(NEXT(edge, forward)->getId()) != activeNodes.end())
+								hasActivePreNode = true;
+						});
+
+						if (!hasActivePreNode)
+						{
+							activeNodes.emplace(other);
+							otherNode->active = true;
+						}
+					}
+				});
+				m_activeNodeIds.clear();
+				m_activeNodeIds.insert(m_activeNodeIds.begin(), activeNodes.begin(), activeNodes.end());
+			}
+		}
+		
 		node->hidden = true;
 	}
 	else
