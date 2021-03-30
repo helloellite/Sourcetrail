@@ -15,6 +15,7 @@
 #include "MessageGraphNodeHide.h"
 #include "MessageTooltipHide.h"
 #include "MessageTooltipShow.h"
+#include "MessageCodeShowDefinition.h"
 #include "QtGraphNode.h"
 #include "QtLineItemAngled.h"
 #include "QtLineItemBezier.h"
@@ -473,6 +474,14 @@ void QtGraphEdge::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
 		if (event->modifiers() & Qt::AltModifier)
 		{
 			this->onHide();
+		}
+		else if(event->modifiers() & Qt::ControlModifier && event->button() == Qt::LeftButton)
+		{
+			Id tokenId = getTokenId();
+			if (tokenId)
+			{
+				MessageCodeShowDefinition(tokenId, true).dispatch();
+			}
 		}
 		else
 		{
