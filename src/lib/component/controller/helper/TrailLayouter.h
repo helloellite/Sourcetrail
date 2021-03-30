@@ -64,6 +64,7 @@ private:
 
 	void removeDeadEnds();
 	void makeAcyclicRecursive(TrailNode* node, std::set<TrailNode*> predecessors);
+	void updateRootNodes();
 
 	void assignLongestPathLevels();
 	void assignRemainingLevels();

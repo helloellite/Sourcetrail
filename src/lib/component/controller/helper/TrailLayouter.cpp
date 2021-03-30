@@ -15,10 +15,10 @@ void TrailLayouter::layoutGraph(
 	{
 		return;
 	}
-
 	removeDeadEnds();
 	for(auto&rootNode:m_rootNodes)
 		makeAcyclicRecursive(rootNode, std::set<TrailNode*>());
+	updateRootNodes(); //xxx for check only, could be delete
 
 	assignLongestPathLevels();
 	assignRemainingLevels();
@@ -161,13 +161,52 @@ void TrailLayouter::makeAcyclicRecursive(TrailNode* node, std::set<TrailNode*> p
 	}
 }
 
+void TrailLayouter::updateRootNodes()
+{
+	std::set<TrailNode*> roots, nodes(m_rootNodes.begin(), m_rootNodes.end()), newNodes;
+	while (nodes.size())
+	{
+		for (auto& node : nodes)
+		{
+			if (node->incomingEdges.size() == 0)
+			{
+				roots.insert(node);
+				continue;
+			}
+			for (auto& edge : node->incomingEdges)
+			{
+				newNodes.insert(edge->origin).second;
+			}
+		}
+		nodes = newNodes;
+		newNodes.clear();
+	}
+	if (m_rootNodes.size() != roots.size()) {
+		LOG_INFO("error");
+	}
+	else {
+		for (auto&node : m_rootNodes)
+		{
+			if (roots.find(node) == roots.end())
+			{
+				LOG_INFO("error2");
+			}
+		}
+	}
+	m_rootNodes.clear();
+	m_rootNodes.insert(m_rootNodes.end(), roots.begin(), roots.end());
+}
+
 void TrailLayouter::assignLongestPathLevels()
 {
 	std::set<TrailNode*> nodes(m_rootNodes.begin(),m_rootNodes.end());
 	std::map<TrailNode*, TrailNode*> predecessorNodes;
-
 	int level = 0;
-
+	for (auto&node : nodes)
+	{
+		if (node->level == -1)
+			node->level = 0;
+	}
 	while (nodes.size())
 	{
 		std::set<TrailNode*> newNodes;

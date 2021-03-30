@@ -214,16 +214,42 @@ void GraphController::handleMessage(MessageActivateTrail* message)
 	MessageStatus(L"Retrieving graph data", false, true).dispatch();
 
 	m_activeEdgeIds.clear();
+	m_activeNodeIds.clear();
 
-	m_activeNodeIds = {message->originId ? message->originId : message->targetId};
 	{
-		// XXX node may not exist here, re-implement this by getting node from Storage
-		auto& node = m_dummyGraphNodes[m_activeNodeIds[0]],
-			parent = m_dummyGraphNodes[m_topLevelAncestorIds[node->tokenId]];
-		parent->data->forEachChildNode([&node, this](Node* child) {
-			if (child->getType() == node->data->getType() && child->getId() != node->tokenId)
-				this->m_activeNodeIds.emplace_back(child->getId());
+		Id activeId = message->originId ? message->originId : message->targetId;
+		NameHierarchy name = m_storageAccess->getNameHierarchyForNodeId(activeId);
+		if(name.size())
+			name.pop();
+		Id parentId = m_storageAccess->getNodeIdsForNameHierarchies({ name })[0];
+		auto graph = m_storageAccess->getGraphForChildrenOfNodeId(parentId);
+		auto node = graph->getNodeById(activeId),
+			parent = graph->getNodeById(parentId);
+		{
+			// expand member recursively
+			std::set<Node*> nodes{ parent }, newNodes;
+			while (nodes.size())
+			{
+				for(auto&node:nodes)
+					node->forEachChildNode([this, &newNodes, graph](Node* child) {
+					if (child->getType().isCollapsible())
+					{
+						auto childGraph = m_storageAccess->getGraphForChildrenOfNodeId(child->getId());
+						auto newChild = childGraph->getNodeById(child->getId());
+						graph->addNodeAndAllChildrenAsPlainCopy(newChild);
+						newNodes.insert(graph->getNodeById(child->getId()));
+					}
+				});
+				nodes = newNodes;
+				newNodes.clear();
+			}
+		}
+		std::set<Id> nodes;
+		parent->forEachNodeRecursive([&node, &nodes](const Node* child) {
+			if (child->getType() == node->getType())
+				nodes.emplace(child->getId());
 		});
+		m_activeNodeIds.insert(m_activeNodeIds.end(), nodes.begin(), nodes.end());
 	}
 	std::shared_ptr<Graph> graph = m_storageAccess->getGraphForTrail(
 		message->originId,
@@ -235,6 +261,45 @@ void GraphController::handleMessage(MessageActivateTrail* message)
 		true /* !message->custom || (message->originId && message->targetId) */,
 		&m_activeNodeIds
 		);
+	{
+		// find real source
+		bool forward = message->originId;
+#define NEXT(edge, direction) (direction? edge->getTo(): edge->getFrom())
+#define LAST(edge, direction) (direction? edge->getFrom(): edge->getTo())
+		Node* node;
+		std::set<Node*> nodes, newNodes, visited;
+		std::set<Id> roots;
+		for (auto&id : m_activeNodeIds)
+		{
+			nodes.insert(graph->getNodeById(id));
+		}
+		visited.insert(nodes.begin(), nodes.end());
+		while (nodes.size())
+		{
+			for (auto&node:nodes)
+			{
+				bool noPre = true;
+				visited.insert(node);
+				node->forEachEdgeOfType(message->edgeTypes, [&node, &noPre, &newNodes, &visited, &forward](Edge* edge) {
+					if (NEXT(edge, forward)->getId() == node->getId())
+					{
+						if (visited.find(LAST(edge, forward)) == visited.end())
+							newNodes.insert(LAST(edge, forward));
+						noPre = false;
+					}
+				});
+				if (noPre)
+				{
+					roots.insert(node->getId());
+				}
+			}
+			nodes = newNodes;
+			newNodes.clear();
+			visited.insert(nodes.begin(), nodes.end());
+		}
+		m_activeNodeIds.clear();
+		m_activeNodeIds.insert(m_activeNodeIds.end(), roots.begin(), roots.end());
+	}
 
 	// remove non-indexed files from include graph if indexed file is origin
 	if (!message->custom && message->edgeTypes & Edge::EDGE_INCLUDE)
