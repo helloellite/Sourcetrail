@@ -337,7 +337,11 @@ QtCustomTrailView::QtCustomTrailView(ViewLayout* viewLayout)
 				edgeTypes,
 				m_nodeNonIndexed->isChecked(),
 				m_slider->value() == m_slider->maximum() ? 0 : m_slider->value(),
-				m_horizontalButton->isChecked());
+				m_horizontalButton->isChecked(), 
+				true,
+				true,
+				true
+			);
 
 			m_controllerProxy.executeAsTaskWithArgs(&CustomTrailController::activateTrail, message);
 

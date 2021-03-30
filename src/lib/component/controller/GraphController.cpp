@@ -218,9 +218,9 @@ void GraphController::handleMessage(MessageActivateTrail* message)
 
 	m_activeEdgeIds.clear();
 	m_activeNodeIds.clear();
-
+	Id activeId = message->originId ? message->originId : message->targetId;
+	if(message->trailSbling)
 	{
-		Id activeId = message->originId ? message->originId : message->targetId;
 		NameHierarchy name = m_storageAccess->getNameHierarchyForNodeId(activeId);
 		if(name.size())
 			name.pop();
@@ -228,6 +228,7 @@ void GraphController::handleMessage(MessageActivateTrail* message)
 		auto graph = m_storageAccess->getGraphForChildrenOfNodeId(parentId);
 		auto node = graph->getNodeById(activeId),
 			parent = graph->getNodeById(parentId);
+		if(message->expandMembers)
 		{
 			// expand member recursively
 			std::set<Node*> nodes{ parent }, newNodes;
@@ -253,6 +254,10 @@ void GraphController::handleMessage(MessageActivateTrail* message)
 				nodes.emplace(child->getId());
 		});
 		m_activeNodeIds.insert(m_activeNodeIds.end(), nodes.begin(), nodes.end());
+	}
+	else
+	{
+		m_activeNodeIds.emplace_back(activeId);
 	}
 	std::shared_ptr<Graph> graph = m_storageAccess->getGraphForTrail(
 		message->originId,
@@ -351,8 +356,8 @@ void GraphController::handleMessage(MessageActivateTrail* message)
 	}
 
 	createDummyGraph(graph);
-
-	breakMemberBox();
+	if(message->breakMemberBox)
+		breakMemberBox();
 	
 	m_graph->setTrailMode(message->horizontalLayout ? Graph::TRAIL_HORIZONTAL : Graph::TRAIL_VERTICAL);
 	m_graph->setHasTrailOrigin(message->originId);

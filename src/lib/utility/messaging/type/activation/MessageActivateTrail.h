@@ -22,6 +22,9 @@ public:
 		, depth(depth)
 		, horizontalLayout(horizontalLayout)
 		, custom(false)
+		, trailSbling(false)
+		, expandMembers(false)
+		, breakMemberBox(true)
 	{
 		setSchedulerId(TabId::currentTab());
 	}
@@ -33,7 +36,10 @@ public:
 		Edge::TypeMask edgeTypes,
 		bool nodeNonIndexed,
 		size_t depth,
-		bool horizontalLayout)
+		bool horizontalLayout,
+		bool trailSbling=false,
+		bool expandMembers=false,
+		bool breakMemberBox=true)
 		: originId(originId)
 		, targetId(targetId)
 		, nodeTypes(nodeTypes)
@@ -42,6 +48,9 @@ public:
 		, depth(depth)
 		, horizontalLayout(horizontalLayout)
 		, custom(true)
+		, trailSbling(trailSbling)
+		, expandMembers(expandMembers)
+		, breakMemberBox(breakMemberBox)
 	{
 		setSchedulerId(TabId::currentTab());
 	}
@@ -66,6 +75,9 @@ public:
 	const size_t depth;
 	const bool horizontalLayout;
 	const bool custom;
+	const bool trailSbling;
+	const bool expandMembers;
+	const bool breakMemberBox;
 };
 
 #endif	  // MESSAGE_ACTIVATE_TRAIL_H
